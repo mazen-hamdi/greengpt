@@ -14,7 +14,7 @@ import { VisibilityType } from './visibility-selector';
 import { useArtifactSelector } from '@/hooks/use-artifact';
 import { toast } from 'sonner';
 import { useCompletion } from 'ai/react';
-import { useEnvironmentalImpact } from '@/lib/environmental-impact';
+import { useEnvironmentalImpact, estimateTokenCount } from '@/lib/environmental-impact';
 import { tokenCounterMiddleware } from '@/lib/token-middleware';
 
 export function Chat({
@@ -31,6 +31,9 @@ export function Chat({
   isReadonly: boolean;
 }) {
   const { mutate } = useSWRConfig();
+
+  // Get the token tracking function from environmental impact
+  const { addTokens } = useEnvironmentalImpact();
 
   const {
     messages,
@@ -49,12 +52,29 @@ export function Chat({
     experimental_throttle: 100,
     sendExtraMessageFields: true,
     generateId: generateUUID,
-    onFinish: () => {
+    onFinish: (message) => {
+      // Track tokens when a message completes
+      if (message.content) {
+        const completionTokens = estimateTokenCount(message.content);
+        addTokens(completionTokens);
+      }
       mutate('/api/history');
     },
     onError: () => {
       toast.error('An error occured, please try again!');
     },
+    // Track prompt tokens before sending
+    onRequest: (request) => {
+      // Get the last user message from the request
+      const userMessages = request.messages.filter(msg => msg.role === 'user');
+      if (userMessages.length > 0) {
+        const lastUserMessage = userMessages[userMessages.length - 1];
+        if (typeof lastUserMessage.content === 'string') {
+          const promptTokens = estimateTokenCount(lastUserMessage.content);
+          addTokens(promptTokens);
+        }
+      }
+    }
   });
 
   const { data: votes } = useSWR<Array<Vote>>(
@@ -65,8 +85,7 @@ export function Chat({
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 
-  const { addTokens } = useEnvironmentalImpact();
-  
+  // Use completion hook with token tracking
   const { completion, input: completionInput, handleInputChange, handleSubmit: handleCompletionSubmit } = useCompletion({
     api: '/api/completion',
     onResponse: (response) => {
@@ -74,8 +93,10 @@ export function Chat({
       if (response.ok) {
         // Track completion tokens on response
         response.text().then(text => {
-          const completionTokenCount = estimateTokenCount(text);
-          addTokens(completionTokenCount);
+          if (text) {
+            const completionTokenCount = estimateTokenCount(text);
+            addTokens(completionTokenCount);
+          }
         }).catch(err => {
           console.error('Error estimating completion tokens:', err);
         });
@@ -83,8 +104,10 @@ export function Chat({
     },
     onFinish: (prompt, completion) => {
       // Track input tokens
-      const promptTokenCount = estimateTokenCount(prompt);
-      addTokens(promptTokenCount);
+      if (prompt) {
+        const promptTokenCount = estimateTokenCount(prompt);
+        addTokens(promptTokenCount);
+      }
     }
   });
 

@@ -8,7 +8,8 @@ export function CO2EmissionsDisplay() {
   const tankRef = useRef<HTMLDivElement>(null);
 
   // Maximum CO2 emissions to display (when tank is 100% full)
-  const MAX_CO2_DISPLAY = 2000; // grams
+  // Updated to reflect new CO2 per token ratio (0.02g per token)
+  const MAX_CO2_DISPLAY = 2000; // grams (roughly 100,000 tokens)
 
   useEffect(() => {
     // Calculate fill percentage based on CO2 emissions

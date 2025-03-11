@@ -8,8 +8,11 @@ interface SessionSummaryProps {
 export function SessionSummary({ onClose }: SessionSummaryProps) {
   const { tokens, waterUsage, co2Emissions } = useEnvironmentalImpact();
   
+  // Convert to milliliters for display
+  const waterUsageInML = waterUsage * 1000;
+  
   // Equivalent real-world examples
-  const waterBottles = Math.round(waterUsage / 0.5); // 500ml water bottles
+  const waterDroplets = Math.round(waterUsageInML / 0.05); // ~0.05ml per water droplet
   const carKilometers = Math.round(co2Emissions / 120); // ~120g CO2 per km for average car
   
   return (
@@ -39,8 +42,8 @@ export function SessionSummary({ onClose }: SessionSummaryProps) {
               </div>
               <div>
                 <h3 className="font-medium">Water Usage</h3>
-                <p className="text-lg">{waterUsage.toFixed(2)} liters</p>
-                <p className="text-sm text-muted-foreground">Equivalent to {waterBottles} bottles of water</p>
+                <p className="text-lg">{waterUsageInML.toFixed(1)} milliliters</p>
+                <p className="text-sm text-muted-foreground">Equivalent to {waterDroplets} droplets of water</p>
               </div>
             </div>
             
@@ -58,7 +61,7 @@ export function SessionSummary({ onClose }: SessionSummaryProps) {
             </div>
           </div>
           
-          {(waterUsage > 8 || co2Emissions > 1600) && (
+          {(waterUsageInML > 8000 || co2Emissions > 1600) && (
             <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-3 rounded-md flex items-start gap-2">
               <div className="shrink-0 mt-0.5">
                 <WarningIcon size={16} />

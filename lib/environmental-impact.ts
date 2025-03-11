@@ -2,6 +2,12 @@
 
 import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { ENV_IMPACT } from './constants';
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+
+// Constants for environmental impact calculations - exact ratios
+const CO2_PER_TOKEN = 0.02; // 0.02 grams CO2 per token (direct ratio)
+const WATER_PER_TOKEN = 0.0001; // 0.1 milliliters = 0.0001 liters per token
 
 interface EnvironmentalImpactContextType {
   tokens: number;
@@ -69,8 +75,8 @@ export function EnvironmentalImpactProvider({ children }: { children: ReactNode 
 
   const addTokens = (count: number) => {
     setTokens(prev => prev + count);
-    setWaterUsage(prev => prev + (count * ENV_IMPACT.TOKENS_TO_WATER_FACTOR));
-    setCO2Emissions(prev => prev + (count * ENV_IMPACT.TOKENS_TO_CO2_FACTOR));
+    setWaterUsage(prev => prev + (count * WATER_PER_TOKEN));
+    setCO2Emissions(prev => prev + (count * CO2_PER_TOKEN));
   };
 
   const resetImpact = () => {
@@ -117,6 +123,7 @@ export function useEnvironmentalImpact() {
 
 // Utility to estimate token count from text
 export function estimateTokenCount(text: string): number {
-  // A simple estimation - about 4 characters per token for English text
+  if (!text) return 0;
+  // Rough estimate: 1 token ≈ 4 characters for English text
   return Math.ceil(text.length / 4);
 }

@@ -9,7 +9,8 @@ export function WaterUsageDisplay() {
   const cylinderRef = useRef<HTMLDivElement>(null);
 
   // Maximum water usage to display (when cylinder is 100% full)
-  const MAX_WATER_DISPLAY = 10; // Liters
+  // For 0.1ml per token, we'll set 10ml (0.01L) as max display (100,000 tokens)
+  const MAX_WATER_DISPLAY = 0.01; // Liters (10ml)
 
   useEffect(() => {
     // Calculate fill percentage based on water usage
@@ -22,6 +23,9 @@ export function WaterUsageDisplay() {
       setTimeout(() => setShowCapacityMessage(false), 5000);
     }
   }, [waterUsage, showCapacityMessage]);
+
+  // Convert to milliliters for display
+  const waterUsageInML = waterUsage * 1000;
 
   return (
     <div className="flex flex-col items-center space-y-2">
@@ -58,7 +62,7 @@ export function WaterUsageDisplay() {
       </div>
       
       <div className="text-xs text-muted-foreground">
-        {waterUsage.toFixed(2)} liters
+        {waterUsageInML.toFixed(1)} ml
       </div>
       <p className="text-xs text-center text-muted-foreground">
         {tokens} tokens used
