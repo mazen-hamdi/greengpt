@@ -1,74 +1,86 @@
 import { estimateTokenCount } from './environmental-impact';
 
+// Types
 type TokenCountCallback = (count: number) => void;
 
-type TokenCounterMiddlewareParams = {
-  onTokenCount: TokenCountCallback;
-};
+interface RequestWithMessages {
+  messages?: Array<{
+    content: string | {text?: string}[];
+  }>;
+}
 
-// Middleware to count tokens for AI SDK
-export function tokenCounterMiddleware({ 
-  onTokenCount 
-}: TokenCounterMiddlewareParams) {
+// Single middleware implementation that can be configured
+export function tokenCounterMiddleware(options?: {
+  onTokenCount?: TokenCountCallback;
+}) {
   return {
-    before: async (options: any) => {
-      try {
-        // Estimate input tokens
-        if (options.messages) {
-          const inputTokens = estimateTokensFromMessages(options.messages);
-          onTokenCount(inputTokens);
-        } else if (options.prompt) {
-          const promptTokens = estimateTokensFromText(
-            typeof options.prompt === 'string' ? options.prompt : JSON.stringify(options.prompt)
-          );
-          onTokenCount(promptTokens);
+    onRequest: (request: RequestWithMessages) => {
+      // Count tokens in outgoing requests
+      if (request.messages && Array.isArray(request.messages)) {
+        const totalTokens = request.messages.reduce((total: number, message) => {
+          if (typeof message.content === 'string') {
+            return total + estimateTokenCount(message.content);
+          } else if (Array.isArray(message.content)) {
+            // Handle multimodal content
+            return total + message.content.reduce((partTotal: number, part) => {
+              if (typeof part === 'string') {
+                return partTotal + estimateTokenCount(part);
+              } else if (typeof part.text === 'string') {
+                return partTotal + estimateTokenCount(part.text);
+              }
+              return partTotal;
+            }, 0);
+          }
+          return total;
+        }, 0);
+
+        if (options?.onTokenCount) {
+          options.onTokenCount(totalTokens);
         }
-      } catch (error) {
-        console.error('Error estimating input tokens:', error);
+        
+        return totalTokens;
       }
-      return options;
+      return 0;
     },
     
-    after: async (completion: any, options: any) => {
-      try {
-        // Estimate completion tokens
-        if (typeof completion === 'string') {
-          const completionTokens = estimateTokensFromText(completion);
-          onTokenCount(completionTokens);
-        } else if (completion?.content) {
-          const contentTokens = estimateTokensFromText(completion.content);
-          onTokenCount(contentTokens);
-        }
-      } catch (error) {
-        console.error('Error estimating completion tokens:', error);
+    onResponse: (response: string | { content?: string }) => {
+      // Count tokens in responses
+      let tokens = 0;
+      
+      if (typeof response === 'string') {
+        tokens = estimateTokenCount(response);
+      } else if (response && typeof response.content === 'string') {
+        tokens = estimateTokenCount(response.content);
       }
-      return completion;
+      
+      if (options?.onTokenCount) {
+        options.onTokenCount(tokens);
+      }
+      
+      return tokens;
     }
   };
 }
 
-// Estimate tokens from text
-function estimateTokensFromText(text: string): number {
-  // Simple estimation - about 4 characters per token for English text
-  return Math.ceil((text || '').length / 4);
+// Helper functions for token estimation
+export function estimateTokensFromText(text: string): number {
+  return estimateTokenCount(text || '');
 }
 
-// Estimate tokens from chat messages
-function estimateTokensFromMessages(messages: any[]): number {
-  let total = 0;
-  for (const message of messages) {
+export function estimateTokensFromMessages(messages: Array<{content: string | any[]}>): number {
+  return messages.reduce((total: number, message) => {
     if (typeof message.content === 'string') {
-      total += estimateTokensFromText(message.content);
+      return total + estimateTokensFromText(message.content);
     } else if (Array.isArray(message.content)) {
-      // Handle content arrays (e.g., with images or other content types)
-      for (const part of message.content) {
+      return total + message.content.reduce((partTotal: number, part) => {
         if (typeof part === 'string') {
-          total += estimateTokensFromText(part);
+          return partTotal + estimateTokensFromText(part);
         } else if (part?.text) {
-          total += estimateTokensFromText(part.text);
+          return partTotal + estimateTokensFromText(part.text);
         }
-      }
+        return partTotal;
+      }, 0);
     }
-  }
-  return total;
+    return total;
+  }, 0);
 }

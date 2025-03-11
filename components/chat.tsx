@@ -64,16 +64,18 @@ export function Chat({
       toast.error('An error occured, please try again!');
     },
     // Track prompt tokens before sending
-    onRequest: (request) => {
-      // Get the last user message from the request
-      const userMessages = request.messages.filter(msg => msg.role === 'user');
-      if (userMessages.length > 0) {
-        const lastUserMessage = userMessages[userMessages.length - 1];
-        if (typeof lastUserMessage.content === 'string') {
-          const promptTokens = estimateTokenCount(lastUserMessage.content);
-          addTokens(promptTokens);
+    experimental_prepareRequestBody: (options) => {
+      // Create token counter middleware with our callback
+      const middleware = tokenCounterMiddleware({
+        onTokenCount: (tokenCount) => {
+          addTokens(tokenCount);
         }
-      }
+      });
+
+      // Count tokens in the request
+      middleware.onRequest(options);
+      
+      return options.requestBody;
     }
   });
 

@@ -2,6 +2,7 @@ import { useEffect, ReactNode } from 'react';
 import { useCompletion } from 'ai/react';
 import { EnvironmentalImpactProvider, useEnvironmentalImpact, estimateTokenCount } from '@/lib/environmental-impact';
 import { EnvironmentalSidebars } from './environmental-impact';
+import { tokenCounterMiddleware } from '@/lib/token-middleware';
 
 interface ChatWithImpactProps {
   children: ReactNode;
@@ -13,6 +14,13 @@ function ChatImpactObserver({ children }: ChatWithImpactProps) {
   
   // This will track messages from the AI SDK
   useEffect(() => {
+    // Create middleware with our token counter
+    const middleware = tokenCounterMiddleware({
+      onTokenCount: (tokenCount) => {
+        addTokens(tokenCount);
+      }
+    });
+    
     // This is a simplified approach, in a real implementation we would
     // need to hook into the actual message stream from the AI provider
     const originalFetch = window.fetch;
@@ -25,14 +33,13 @@ function ChatImpactObserver({ children }: ChatWithImpactProps) {
       // Check if this is a chat API request
       if (typeof input === 'string' && input.includes('/api/chat')) {
         try {
-          // Try to parse as JSON, but don't crash if it's not valid JSON
+          // Try to parse the response to estimate tokens
           clone.text().then(text => {
             try {
               const data = JSON.parse(text);
-              // Process the response to extract tokens
+              // Process the response with our middleware
               if (data && data.content) {
-                const tokenCount = estimateTokenCount(data.content);
-                addTokens(tokenCount);
+                middleware.onResponse(data);
               }
             } catch (error) {
               // Ignore errors when trying to parse non-JSON responses

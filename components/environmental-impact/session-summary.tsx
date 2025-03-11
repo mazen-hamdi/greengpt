@@ -1,82 +1,62 @@
 import { useEnvironmentalImpact } from '@/lib/environmental-impact';
-import { CrossIcon, WarningIcon } from '../icons';
+import { LineChartIcon, WarningIcon } from '../icons';
+import { formatDistanceToNow } from 'date-fns';
 
-interface SessionSummaryProps {
-  onClose: () => void;
-}
+export function SessionSummary() {
+  const { tokens, waterUsage, co2Emissions, sessionHistory } = useEnvironmentalImpact();
 
-export function SessionSummary({ onClose }: SessionSummaryProps) {
-  const { tokens, waterUsage, co2Emissions } = useEnvironmentalImpact();
-  
-  // Convert to milliliters for display
-  const waterUsageInML = waterUsage * 1000;
-  
-  // Equivalent real-world examples
-  const waterDroplets = Math.round(waterUsageInML / 0.05); // ~0.05ml per water droplet
-  const carKilometers = Math.round(co2Emissions / 120); // ~120g CO2 per km for average car
-  
+  // Format the data for display
+  const formattedWater = waterUsage.toFixed(4);
+  const formattedCO2 = co2Emissions.toFixed(2);
+
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-      <div className="bg-background rounded-lg p-6 w-full max-w-md shadow-xl">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Environmental Impact</h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
-            <CrossIcon size={20} />
-          </button>
+    <div className="p-4 border rounded-lg bg-muted/50">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-medium flex items-center gap-2">
+          <LineChartIcon size={18} />
+          Environmental Impact
+        </h3>
+        {tokens > 1000 && (
+          <div className="text-amber-500 flex items-center gap-1">
+            <WarningIcon size={16} />
+            <span className="text-xs">High usage</span>
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex flex-col">
+          <span className="text-sm text-muted-foreground">Total tokens used:</span>
+          <span className="text-xl font-semibold">{tokens.toLocaleString()}</span>
         </div>
-        
-        <div className="space-y-6">
-          <div className="flex items-center justify-between border-b pb-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Tokens Used</p>
-              <p className="text-2xl font-medium">{tokens.toLocaleString()}</p>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">Water usage:</span>
+            <span className="font-medium">{formattedWater} L</span>
+          </div>
+
+          <div className="flex flex-col">
+            <span className="text-sm text-muted-foreground">CO₂ emissions:</span>
+            <span className="font-medium">{formattedCO2} g</span>
+          </div>
+        </div>
+
+        {sessionHistory.length > 0 && (
+          <div className="mt-4">
+            <h4 className="text-sm font-medium mb-2">Recent Sessions</h4>
+            <div className="max-h-40 overflow-y-auto">
+              {sessionHistory.slice().reverse().map(session => (
+                <div key={session.id} className="flex justify-between py-1 text-sm border-b last:border-0">
+                  <span className="text-muted-foreground">
+                    {new Date(session.timestamp).toLocaleDateString()}
+                  </span>
+                  <span>{session.tokens.toLocaleString()} tokens</span>
+                </div>
+              ))}
             </div>
           </div>
-          
-          <div className="space-y-4">
-            <div className="flex items-start gap-4">
-              <div className="mt-1 text-blue-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 2v6m0 0c-3.3 0-6 2.7-6 6s2.7 6 6 6 6-2.7 6-6-2.7-6-6-6z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-medium">Water Usage</h3>
-                <p className="text-lg">{waterUsageInML.toFixed(1)} milliliters</p>
-                <p className="text-sm text-muted-foreground">Equivalent to {waterDroplets} droplets of water</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-4">
-              <div className="mt-1 text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 19a2 2 0 1 0 4 0a7 7 0 1 0-8 0a2 2 0 1 0 4 0m0-2a2 2 0 1 0 0-4a2 2 0 1 0 0 4z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 className="font-medium">CO₂ Emissions</h3>
-                <p className="text-lg">{co2Emissions.toFixed(2)} grams</p>
-                <p className="text-sm text-muted-foreground">Equivalent to driving {carKilometers} km in a car</p>
-              </div>
-            </div>
-          </div>
-          
-          {(waterUsageInML > 8000 || co2Emissions > 1600) && (
-            <div className="bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 p-3 rounded-md flex items-start gap-2">
-              <div className="shrink-0 mt-0.5">
-                <WarningIcon size={16} />
-              </div>
-              <p className="text-sm">Your session is nearing capacity limits. Consider starting a new session soon.</p>
-            </div>
-          )}
-          
-          <button
-            onClick={onClose}
-            className="w-full py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-          >
-            Close
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );

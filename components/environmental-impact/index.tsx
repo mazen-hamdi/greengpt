@@ -1,33 +1,17 @@
-import { WaterUsageDisplay } from './water-usage-display';
-import { CO2EmissionsDisplay } from './co2-emissions-display';
+import { useEnvironmentalImpact } from '@/lib/environmental-impact';
 import { SessionSummary } from './session-summary';
-import { useState } from 'react';
 
 export function EnvironmentalSidebars() {
-  const [showSummary, setShowSummary] = useState(false);
+  const { tokens } = useEnvironmentalImpact();
+  
+  // Only show if there are tokens tracked
+  if (tokens === 0) return null;
   
   return (
-    <>
-      {/* Left sidebar with water usage */}
-      <div className="hidden md:flex flex-col w-20 border-r border-border items-center justify-center">
-        <WaterUsageDisplay />
-        <button 
-          onClick={() => setShowSummary(true)}
-          className="text-xs text-muted-foreground hover:text-primary mt-2 cursor-pointer"
-        >
-          View Details
-        </button>
-      </div>
-      
-      {/* Right sidebar with CO2 emissions */}
-      <div className="hidden md:flex flex-col w-20 border-l border-border items-center justify-center">
-        <CO2EmissionsDisplay />
-      </div>
-      
-      {/* Session summary modal */}
-      {showSummary && (
-        <SessionSummary onClose={() => setShowSummary(false)} />
-      )}
-    </>
+    <div className="fixed right-4 bottom-4 w-80 z-10">
+      <SessionSummary />
+    </div>
   );
 }
+
+export { SessionSummary };

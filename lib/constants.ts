@@ -37,10 +37,18 @@ export const MODELS = [
   }
 ];
 
-// Environmental impact configuration
+// Environmental impact constants
 export const ENV_IMPACT = {
-  TOKENS_TO_WATER_FACTOR: 0.001, // liters per token
-  TOKENS_TO_CO2_FACTOR: 0.2, // grams per token
+  // Average token calculation ratios
+  TOKEN_TO_CO2: 0.02, // grams of CO2 per token
+  TOKEN_TO_WATER: 0.0001, // liters of water per token (0.1 ml)
+  
+  // Display thresholds
+  HIGH_TOKEN_THRESHOLD: 1000, // tokens threshold for high usage warning
+  
+  // Display limits for visualization
+  MAX_CO2_DISPLAY: 2000, // grams (for 100% fill in visualization)
+  MAX_WATER_DISPLAY: 0.01 // liters (10ml) for 100% fill
 };
 
 // App configuration
