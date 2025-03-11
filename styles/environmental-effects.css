@@ -1,0 +1,66 @@
+/* 3D transformations */
+.perspective-500 {
+  perspective: 500px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.transform-3d {
+  transform: translateZ(0);
+}
+
+.rotate-x-70 {
+  transform: rotateX(70deg);
+}
+
+/* Water animations */
+@keyframes wave {
+  0%, 100% { transform: translateX(-25%); }
+  50% { transform: translateX(25%); }
+}
+
+@keyframes ripple {
+  0% { transform: scale(0); opacity: 1; }
+  100% { transform: scale(3); opacity: 0; }
+}
+
+.animate-wave {
+  animation: wave 3s ease-in-out infinite;
+}
+
+.animate-ripple {
+  animation: ripple 2s linear infinite;
+}
+
+/* Gas particle animations */
+.gas-particle {
+  position: absolute;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  animation: float 4s infinite ease-in;
+}
+
+.delay-1 {
+  animation-delay: 1s;
+  left: 30%;
+}
+
+.delay-2 {
+  animation-delay: 2s;
+  left: 60%;
+}
+
+.delay-3 {
+  animation-delay: 3s;
+  left: 20%;
+}
+
+@keyframes float {
+  0% { opacity: 0; bottom: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; bottom: 100%; }
+}
