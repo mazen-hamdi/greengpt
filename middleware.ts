@@ -1,9 +1,21 @@
-import NextAuth from 'next-auth';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+import { auth } from './app/(auth)/auth';
+ 
+export default auth((req) => {
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set('x-url', req.url);
+  
+  // Pass the environment flag to indicate if this is in a CI environment
+  requestHeaders.set('x-is-ci', process.env.CI === 'true' ? 'true' : 'false');
 
-import { authConfig } from '@/app/(auth)/auth.config';
-
-export default NextAuth(authConfig).auth;
-
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
+});
+ 
 export const config = {
-  matcher: ['/', '/:id', '/api/:path*', '/login', '/register'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };

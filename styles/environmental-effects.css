@@ -8,7 +8,7 @@
 }
 
 .transform-3d {
-  transform: perspective(500px);
+  transform: translateZ(-5px);
 }
 
 .rotate-x-70 {
@@ -23,13 +23,12 @@
 
 @keyframes ripple {
   0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
+    transform: scale(0);
+    opacity: 0.5;
   }
   100% {
-    background-position: 0% 50%;
+    transform: scale(2);
+    opacity: 0;
   }
 }
 
@@ -38,9 +37,7 @@
 }
 
 .animate-ripple {
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 70%);
-  background-size: 200% 200%;
-  animation: ripple 4s ease infinite;
+  animation: ripple 3s ease-out infinite;
 }
 
 /* Gas particle animations */
@@ -48,36 +45,34 @@
   position: absolute;
   width: 4px;
   height: 4px;
-  background-color: rgba(255, 255, 255, 0.5);
+  background-color: rgba(255, 255, 255, 0.4);
   border-radius: 50%;
-  animation: float 4s infinite ease-in-out;
+  animation: float 4s ease-in-out infinite;
+  left: 20%;
 }
 
-.delay-1 {
+.gas-particle.delay-1 {
+  left: 40%;
   animation-delay: 1s;
-  left: 30%;
 }
 
-.delay-2 {
+.gas-particle.delay-2 {
+  left: 60%;
   animation-delay: 2s;
-  left: 50%;
 }
 
-.delay-3 {
+.gas-particle.delay-3 {
+  left: 80%;
   animation-delay: 3s;
-  left: 70%;
 }
 
 @keyframes float {
   0% {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  50% {
-    opacity: 0.8;
+    bottom: 0;
+    opacity: 1;
   }
   100% {
-    transform: translateY(0%);
+    bottom: 100%;
     opacity: 0;
   }
 }

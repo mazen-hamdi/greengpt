@@ -16,7 +16,8 @@
     "db:pull": "drizzle-kit pull",
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
-    "test": "export PLAYWRIGHT=True && pnpm exec playwright test --workers=4"
+    "test": "export PLAYWRIGHT=True && pnpm exec playwright test --workers=4",
+    "vercel-build": "pnpm install --no-frozen-lockfile && next build"
   },
   "dependencies": {
     "@ai-sdk/fireworks": "0.1.12",

@@ -21,43 +21,39 @@ export function tokenCounterMiddleware(options?: {
           if (typeof message.content === 'string') {
             return total + estimateTokenCount(message.content);
           } else if (Array.isArray(message.content)) {
-            // Handle multimodal content
-            return total + message.content.reduce((partTotal: number, part) => {
-              if (typeof part === 'string') {
-                return partTotal + estimateTokenCount(part);
-              } else if (typeof part.text === 'string') {
-                return partTotal + estimateTokenCount(part.text);
+            return total + message.content.reduce((subtotal, part) => {
+              if (part.text) {
+                return subtotal + estimateTokenCount(part.text);
               }
-              return partTotal;
+              return subtotal;
             }, 0);
           }
           return total;
         }, 0);
 
+        // Call token counter callback if provided
         if (options?.onTokenCount) {
           options.onTokenCount(totalTokens);
         }
-        
-        return totalTokens;
       }
-      return 0;
     },
     
     onResponse: (response: string | { content?: string }) => {
-      // Count tokens in responses
-      let tokens = 0;
+      let tokenCount = 0;
       
+      // Extract content from string or object response
       if (typeof response === 'string') {
-        tokens = estimateTokenCount(response);
-      } else if (response && typeof response.content === 'string') {
-        tokens = estimateTokenCount(response.content);
+        tokenCount = estimateTokenCount(response);
+      } else if (response.content) {
+        tokenCount = estimateTokenCount(response.content);
       }
       
-      if (options?.onTokenCount) {
-        options.onTokenCount(tokens);
+      // Call token counter callback if provided
+      if (tokenCount > 0 && options?.onTokenCount) {
+        options.onTokenCount(tokenCount);
       }
       
-      return tokens;
+      return response;
     }
   };
 }
